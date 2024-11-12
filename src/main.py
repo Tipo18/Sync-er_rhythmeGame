@@ -55,10 +55,7 @@ while running:
     else:
         screen.fill(BLACK)
         # Active game Box
-        pygame.draw.rect(screen, WHITE, (0, 650, 1500, 6))
-        pygame.draw.rect(screen, WHITE, (0, 994, 1500, 6))
-        pygame.draw.rect(screen, WHITE, (0, 650, 6, 350))
-        pygame.draw.rect(screen, WHITE, (1494, 650, 6, 350))
+        pygame.draw.rect(screen, WHITE, (0, 650, 1500, 350), width=6, border_radius=35)
 
         # game line
         pygame.draw.rect(screen, WHITE, (0, 650 + 45 + 63, 1500, 3))
