@@ -18,6 +18,8 @@ small_font = pygame.font.SysFont('Arial', 24)
 
 # Game States
 running = True
+menue = True
+Pause = False
 
 clock = pygame.time.Clock()
 
@@ -33,11 +35,26 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_q:
                 running = False
+            if event.key == pygame.K_RETURN:
+                menue = False
+            if event.key == pygame.K_p and menue == False:
+                Pause = not Pause
 
-    screen.fill(WHITE)
-    #pygame.display.update()
-    draw_text("Press Q to ", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2)
+    if menue:
+        screen.fill(WHITE)
+        draw_text("Main Menu", font, BLACK, screen, WIDTH // 2, HEIGHT // 3)
+        draw_text("Press ENTER to Start", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2)
+        draw_text("Press P to Resume", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 40)
+        draw_text("Press Q to Quit", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 80)
+        pygame.display.flip()
+    elif Pause:
+        screen.fill(WHITE)
+        draw_text("Pause", font, BLACK, screen, WIDTH // 2, HEIGHT // 3)
+        draw_text("Press P to Resume", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2)
+        pygame.display.flip()
+    else:
+        screen.fill(BLACK)
+        pygame.display.flip()
 
-    pygame.display.flip()
     clock.tick(60)
 pygame.quit()
