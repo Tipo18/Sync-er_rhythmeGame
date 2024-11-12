@@ -3,7 +3,7 @@ import pygame
 pygame.init()
 
 # init screen
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = 1500, 1000
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("My Rhythme Game")
 
@@ -54,6 +54,18 @@ while running:
         pygame.display.flip()
     else:
         screen.fill(BLACK)
+        # Active game Box
+        pygame.draw.rect(screen, WHITE, (0, 650, 1500, 6))
+        pygame.draw.rect(screen, WHITE, (0, 994, 1500, 6))
+        pygame.draw.rect(screen, WHITE, (0, 650, 6, 350))
+        pygame.draw.rect(screen, WHITE, (1494, 650, 6, 350))
+
+        # game line
+        pygame.draw.rect(screen, WHITE, (0, 650 + 45 + 63, 1500, 3))
+        pygame.draw.rect(screen, WHITE, (0, 650 + 45 + 125 + 63, 1500, 3))
+        pygame.draw.rect(screen, WHITE, (100 + 10, 650, 3, 350))
+        pygame.draw.rect(screen, WHITE, (106 + 10, 650, 3, 350))
+
         pygame.display.flip()
 
     clock.tick(60)
