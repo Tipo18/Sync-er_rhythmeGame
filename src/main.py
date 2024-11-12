@@ -1,4 +1,5 @@
 import pygame
+import random
 
 pygame.init()
 
@@ -23,10 +24,12 @@ display_active = False
 Pause = False
 
 framecount = 0
-disque_arr = []
 first_line_hg = 650 + 45 + 65
 second_line_hg = first_line_hg + 125
 only_line_width = 113
+missed_disque = 0
+validated_disque = 0
+points = 0
 
 clock = pygame.time.Clock()
 
@@ -53,6 +56,23 @@ class Disque(pygame.sprite.Sprite):
 
 all_disques = pygame.sprite.Group()
 
+def find_inst(line):
+    # Filter disques based on the line value
+    filtered_disques = [
+        disque for disque in all_disques 
+        if ((disque.rect.y == first_line_hg - 35 and line == 1) or
+            (disque.rect.y == second_line_hg - 35 and line == 2)) 
+        and disque.rect.x > only_line_width - 40              # subjective to be able to valide even if a bit after the line
+    ]
+    if not filtered_disques:
+        return None  # No matching disques found
+    
+    # Find the instance with the rect.x value closest to 0
+    closest_inst = min(filtered_disques, key=lambda x: abs(x.rect.x))
+    
+    return closest_inst
+
+
 # Start game loop
 while running:
     for event in pygame.event.get():
@@ -63,6 +83,10 @@ while running:
                 menue = False
             if event.key == pygame.K_p and menue == False:
                 Pause = not Pause
+            if event.key == pygame.K_a and menue == False and Pause == False:
+                test(1)
+            if event.key == pygame.K_z and menue == False and Pause == False:
+                test(2)
 
     if menue:
         screen.fill(WHITE)
@@ -89,10 +113,17 @@ while running:
         pygame.draw.circle(screen, WHITE, (only_line_width,first_line_hg), 45, width=4)
         pygame.draw.circle(screen, WHITE, (only_line_width,second_line_hg ), 45, width=4)
 
+        # Texte
+        draw_text(f"fps: {int(clock.get_fps())}", small_font, WHITE, screen, WIDTH // 8, HEIGHT // 8)
+        draw_text(f"missed disques: {missed_disque}", small_font, WHITE, screen, WIDTH // 8, HEIGHT // 8 + 40)
+        draw_text(f"validated disques: {validated_disque}", small_font, WHITE, screen, WIDTH // 8, HEIGHT // 8 + 80)
+        draw_text(f"points: {points}", small_font, WHITE, screen, WIDTH // 8, HEIGHT // 8 + 120)
+
+
         # create disc
         framecount += 1
         if framecount % 100 == 0:
-            all_disques.add(Disque(1,10))
+            all_disques.add(Disque(random.randint(1,2),random.randint(2,5)))
 
         # Update all sprites in the group
         all_disques.update()
