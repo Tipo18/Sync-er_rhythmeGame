@@ -27,16 +27,17 @@ framecount = 0
 first_line_hg = 650 + 45 + 65
 second_line_hg = first_line_hg + 125
 only_line_width = 175
+
 missed_disque = 0
 validated_disque = 0
 points = 0
 
-clock = pygame.time.Clock()
-
-def draw_text(text, font, color, surface, x, y):
-    """Helper function to draw text on the screen."""
+def draw_text(text, font, color, surface, x, y, align):
     text_obj = font.render(text, True, color)
-    text_rect = text_obj.get_rect(center=(x, y))
+    if align == "center":
+        text_rect = text_obj.get_rect(center=(x, y))
+    elif align == "left":
+        text_rect = text_obj.get_rect(topleft = (x, y))
     surface.blit(text_obj, text_rect)
 
 
@@ -82,6 +83,7 @@ def point_logic(object):
         global validated_disque
         global points
         dist = object.rect.x + 35 - only_line_width
+        print(dist)
         if dist < 80:
             object.kill()
             validated_disque += 1
@@ -92,14 +94,14 @@ def point_logic(object):
             else:
                 points += 5
             
+clock = pygame.time.Clock()
 
-    
 
 # Start game loop
 while running:
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_q:
+            if event.key == pygame.K_m:
                 running = False
             if event.key == pygame.K_RETURN:
                 menue = False
@@ -114,15 +116,15 @@ while running:
 
     if menue:
         screen.fill(WHITE)
-        draw_text("Main Menu", font, BLACK, screen, WIDTH // 2, HEIGHT // 3)
-        draw_text("Press ENTER to Start", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2)
-        draw_text("Press P to Resume", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 40)
-        draw_text("Press Q to Quit", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 80)
+        draw_text("Main Menu", font, BLACK, screen, WIDTH // 2, HEIGHT // 3, "center")
+        draw_text("Press ENTER to Start", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2, "center")
+        draw_text("Press P to Resume", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 40, "center")
+        draw_text("Press M to Quit", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 80, "center")
         pygame.display.flip()
     elif Pause:
         screen.fill(WHITE)
-        draw_text("Pause", font, BLACK, screen, WIDTH // 2, HEIGHT // 3)
-        draw_text("Press P to Resume", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2)
+        draw_text("Pause", font, BLACK, screen, WIDTH // 2, HEIGHT // 3, "center")
+        draw_text("Press P to Resume", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2, "center")
         pygame.display.flip()
     else:
         screen.fill(BLACK)
@@ -138,10 +140,10 @@ while running:
         pygame.draw.circle(screen, WHITE, (only_line_width,second_line_hg ), 45, width=4)
 
         # Texte
-        draw_text(f"fps: {int(clock.get_fps())}", small_font, WHITE, screen, WIDTH // 8, HEIGHT // 8)
-        draw_text(f"missed disques: {missed_disque}", small_font, WHITE, screen, WIDTH // 8, HEIGHT // 8 + 40)
-        draw_text(f"validated disques: {validated_disque}", small_font, WHITE, screen, WIDTH // 8, HEIGHT // 8 + 80)
-        draw_text(f"points: {points}", font, WHITE, screen, WIDTH // 8, HEIGHT // 2 + 120)
+        draw_text(f"fps: {int(clock.get_fps())}", small_font, WHITE, screen, 20, HEIGHT // 8, "left")
+        draw_text(f"missed disques: {missed_disque}", small_font, WHITE, screen, 20, HEIGHT // 8 + 40, "left")
+        draw_text(f"validated disques: {validated_disque}", small_font, WHITE, screen, 20, HEIGHT // 8 + 80, "left")
+        draw_text(f"points: {points}", font, WHITE, screen, 20, HEIGHT // 2, "left")
 
 
         # create disc
