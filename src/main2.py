@@ -38,6 +38,10 @@ class Game():
         self.pause = False
         self.player_name = ["-"] * 6
         self.num_key = 0
+        self.active_level = None
+
+    def link_active_level(self, active_level):
+        self.active_level = active_level
 
 class Player():
     def __init__(self, name):
@@ -58,17 +62,20 @@ class Disque(pygame.sprite.Sprite):
         if self.rect.x < 0:
             self.kill()
 
-all_disques = pygame.sprite.Group()
-
-
-class Active_Level():
-    def __inti__(self):
-        self.active_player
-        self.active_disk
-        self.pefect = 0
+class Active_Level:
+    def __init__(self):
+        self.active_player = None
+        self.active_disk = None
+        self.perfect = 0
         self.great = 0
         self.ok = 0
         self.fault = 0
+
+    def link_player(self, player):
+        self.active_player = player
+
+    def link_disks(self, all_disks):
+        self.active_disk = all_disks
 
 
 # Screen
@@ -97,6 +104,7 @@ def level_lauching_screen(game_object):
                 if game_object.player_name[0] != "-":
                     game_object.level_lauching = False
                     game_object.menu = False
+                    game_class_init(game_object)
             elif event.key == pygame.K_BACKSPACE:
                 game_object.player_name[game_object.num_key] = "-"
                 if game_object.num_key > 0:
@@ -136,16 +144,32 @@ def level_active_screen(game_object):
 
     screen.fill(BLACK)
     pygame.draw.rect(screen, WHITE, (0, 650, 1500, 350), width=6, border_radius=35)
-        # White bar
+    # White bar
     pygame.draw.rect(screen, WHITE, (0, horizontal_line_1-1, 1500, 3)) # -1 to have the middle of correct shift due to line width
     pygame.draw.rect(screen, WHITE, (0, horizontal_line_2-1, 1500, 3))
     pygame.draw.rect(screen, WHITE, (vertical_line-3, 650, 3, 350)) # +/- to correct shift due to width
     pygame.draw.rect(screen, WHITE, (vertical_line+1, 650, 3, 350))
-        # Target circle
+    # Target circle
     pygame.draw.circle(screen, WHITE, (vertical_line,horizontal_line_1), 45, width=4)
     pygame.draw.circle(screen, WHITE, (vertical_line,horizontal_line_2 ), 45, width=4)
+
+    # Text
+    draw_text(f"fps: {int(clock.get_fps())}", small_font, WHITE, screen, 20, HEIGHT // 8, "left")
+    draw_text(f"player: {game_object.active_level.active_player.name}", small_font, WHITE, screen, 20, HEIGHT // 8 + 40, "left")
+
     pygame.display.flip()
 
+
+# Game logic function
+
+def game_class_init(game_object):
+    player_name = "".join(char for char in game_object.player_name if char != "-").strip()
+    player = Player(player_name)
+
+    active_level = Active_Level()
+    active_level.link_player(player)
+
+    game_object.link_active_level(active_level)  
 
 # Game loop
 game_object = Game()
@@ -153,7 +177,7 @@ game_object = Game()
 while game_object.runnig:
     if game_object.menu:
         if not game_object.level_lauching:
-            menu_screen(game_object) 
+            menu_screen(game_object)
         else:
             level_lauching_screen(game_object)
     elif game_object.pause:
