@@ -67,7 +67,7 @@ def find_closest_disque(line):
         disque for disque in all_disques 
         if ((disque.rect.y == first_line_hg - 35 and line == 1) or
             (disque.rect.y == second_line_hg - 35 and line == 2)) 
-        and disque.rect.x + 35 > only_line_width - 75          # subjective to be able to valide even if a bit after the line
+        and disque.rect.x + 35 > only_line_width - 80          # subjective to be able to valide even if a bit after the line
     ]
     if not filtered_disques:
         return None  # No matching disques found
@@ -80,12 +80,17 @@ def find_closest_disque(line):
 def point_logic(object):
     if object is not None:
         global validated_disque
+        global points
         dist = object.rect.x + 35 - only_line_width
-        print(dist)
-        if dist < 100:
+        if dist < 80:
             object.kill()
             validated_disque += 1
-            print("killed")
+            if abs(dist) <= 3:
+                points += 100
+            elif abs(dist) <= 20:
+                points += 15
+            else:
+                points += 5
             
 
     
@@ -136,19 +141,21 @@ while running:
         draw_text(f"fps: {int(clock.get_fps())}", small_font, WHITE, screen, WIDTH // 8, HEIGHT // 8)
         draw_text(f"missed disques: {missed_disque}", small_font, WHITE, screen, WIDTH // 8, HEIGHT // 8 + 40)
         draw_text(f"validated disques: {validated_disque}", small_font, WHITE, screen, WIDTH // 8, HEIGHT // 8 + 80)
-        draw_text(f"points: {points}", small_font, WHITE, screen, WIDTH // 8, HEIGHT // 8 + 120)
+        draw_text(f"points: {points}", font, WHITE, screen, WIDTH // 8, HEIGHT // 2 + 120)
 
 
         # create disc
         framecount += 1
-        if framecount % 100 == 0:
-            all_disques.add(Disque(random.randint(1,2),random.randint(2,5)))
-            #all_disques.add(Disque(1,1))
+        if framecount % 50 == 0:
+            all_disques.add(Disque(random.randint(1,2),4))
 
         # Update all sprites in the group
         all_disques.update()
         all_disques.draw(screen)
         pygame.display.flip()
+
+        if validated_disque >= 35 or missed_disque >= 3:
+            running = False
 
 
     clock.tick(60)
