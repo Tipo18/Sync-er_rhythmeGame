@@ -26,7 +26,7 @@ Pause = False
 framecount = 0
 first_line_hg = 650 + 45 + 65
 second_line_hg = first_line_hg + 125
-only_line_width = 113
+only_line_width = 175
 missed_disque = 0
 validated_disque = 0
 points = 0
@@ -47,22 +47,27 @@ class Disque(pygame.sprite.Sprite):
         pygame.draw.circle(self.image, (255, 255, 255), (35, 35), 35)  # Draw circle
         self.rect = self.image.get_rect()  # Get rect for positioning
         self.rect.y = first_line_hg-35 if line == 1 else second_line_hg-35
-        self.rect.x = 1465
+        self.rect.x = 1500
         self.speed = speed
 
     def update(self):
         """Update the object's position."""
+        global missed_disque
         self.rect.x -= self.speed  # Move left by speed
+        if self.rect.x < 0:  # Check if the object has moved off the screen
+            self.kill()
+            missed_disque += 1 
 
 all_disques = pygame.sprite.Group()
 
-def find_inst(line):
+
+def find_closest_disque(line):
     # Filter disques based on the line value
     filtered_disques = [
         disque for disque in all_disques 
         if ((disque.rect.y == first_line_hg - 35 and line == 1) or
             (disque.rect.y == second_line_hg - 35 and line == 2)) 
-        and disque.rect.x > only_line_width - 40              # subjective to be able to valide even if a bit after the line
+        and disque.rect.x + 35 > only_line_width - 75          # subjective to be able to valide even if a bit after the line
     ]
     if not filtered_disques:
         return None  # No matching disques found
@@ -72,6 +77,18 @@ def find_inst(line):
     
     return closest_inst
 
+def point_logic(object):
+    if object is not None:
+        global validated_disque
+        dist = object.rect.x + 35 - only_line_width
+        print(dist)
+        if dist < 100:
+            object.kill()
+            validated_disque += 1
+            print("killed")
+            
+
+    
 
 # Start game loop
 while running:
@@ -84,9 +101,11 @@ while running:
             if event.key == pygame.K_p and menue == False:
                 Pause = not Pause
             if event.key == pygame.K_a and menue == False and Pause == False:
-                test(1)
+                disk1 = find_closest_disque(1)
+                point_logic(disk1)
             if event.key == pygame.K_z and menue == False and Pause == False:
-                test(2)
+                disk2 = find_closest_disque(2)
+                point_logic(disk2)
 
     if menue:
         screen.fill(WHITE)
@@ -124,6 +143,7 @@ while running:
         framecount += 1
         if framecount % 100 == 0:
             all_disques.add(Disque(random.randint(1,2),random.randint(2,5)))
+            #all_disques.add(Disque(1,1))
 
         # Update all sprites in the group
         all_disques.update()
