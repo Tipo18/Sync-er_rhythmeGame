@@ -1,3 +1,4 @@
+import random
 import pygame
 
 # Game initialisation
@@ -43,25 +44,6 @@ class Game():
     def link_active_level(self, active_level):
         self.active_level = active_level
 
-class Player():
-    def __init__(self, name):
-        self.name = name
-
-class Disque(pygame.sprite.Sprite):
-    def __init__(self, line):
-        super().__init__()  # Initialize the Sprite base class
-        self.image = pygame.Surface((70, 70), pygame.SRCALPHA)
-        pygame.draw.circle(self.image, (255, 255, 255), (35, 35), 35) 
-        self.rect = self.image.get_rect()
-        self.rect.y = horizontal_line_1-35 if line == 1 else horizontal_line_2-35
-        self.rect.x = 1500
-        self.speed = 4
-
-    def update(self):
-        self.rect.x -= self.speed 
-        if self.rect.x < 0:
-            self.kill()
-
 class Active_Level:
     def __init__(self):
         self.active_player = None
@@ -74,8 +56,27 @@ class Active_Level:
     def link_player(self, player):
         self.active_player = player
 
-    def link_disks(self, all_disks):
-        self.active_disk = all_disks
+    def link_disks(self):
+        self.active_disk = pygame.sprite.Group()
+
+class Player():
+    def __init__(self, name):
+        self.name = name
+
+class Disque(pygame.sprite.Sprite):
+    def __init__(self, line):
+        super().__init__()  # Initialize the Sprite base class
+        self.image = pygame.Surface((70, 70), pygame.SRCALPHA)
+        pygame.draw.circle(self.image, (255, 255, 255), (35, 35), 35) 
+        self.rect = self.image.get_rect()
+        self.rect.y = horizontal_line_1-35 if line == 1 else horizontal_line_2-35
+        self.rect.x = 1500
+        self.speed = 1
+
+    def update(self):
+        self.rect.x -= self.speed 
+        if self.rect.x < 0:
+            self.kill()
 
 
 # Screen
@@ -157,6 +158,16 @@ def level_active_screen(game_object):
     draw_text(f"fps: {int(clock.get_fps())}", small_font, WHITE, screen, 20, HEIGHT // 8, "left")
     draw_text(f"player: {game_object.active_level.active_player.name}", small_font, WHITE, screen, 20, HEIGHT // 8 + 40, "left")
 
+    # create disc
+    global framecount
+    framecount += 1
+
+    if framecount % 50 == 0:
+        game_object.active_level.active_disk.add(Disque(random.randint(1,2)))
+        
+    game_object.active_level.active_disk.update()
+    game_object.active_level.active_disk.draw(screen)
+
     pygame.display.flip()
 
 
@@ -164,12 +175,12 @@ def level_active_screen(game_object):
 
 def game_class_init(game_object):
     player_name = "".join(char for char in game_object.player_name if char != "-").strip()
-    player = Player(player_name)
+    player_object = Player(player_name)
+    active_level_object = Active_Level()
 
-    active_level = Active_Level()
-    active_level.link_player(player)
-
-    game_object.link_active_level(active_level)  
+    active_level_object.link_player(player_object)
+    active_level_object.link_disks()
+    game_object.link_active_level(active_level_object)  
 
 # Game loop
 game_object = Game()
