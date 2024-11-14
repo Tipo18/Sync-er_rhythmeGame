@@ -71,7 +71,7 @@ class Disque(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.y = horizontal_line_1-35 if line == 1 else horizontal_line_2-35
         self.rect.x = 1500
-        self.speed = 1
+        self.speed = 6
 
     def update(self):
         self.rect.x -= self.speed 
@@ -162,7 +162,7 @@ def level_active_screen(game_object):
     global framecount
     framecount += 1
 
-    if framecount % 50 == 0:
+    if framecount % 70 == 0:
         game_object.active_level.active_disk.add(Disque(random.randint(1,2)))
         
     game_object.active_level.active_disk.update()
@@ -182,10 +182,14 @@ def game_class_init(game_object):
     active_level_object.link_disks()
     game_object.link_active_level(active_level_object)  
 
+fps = 60  # Target frame rate
+clock = pygame.time.Clock()
+
 # Game loop
 game_object = Game()
 
 while game_object.runnig:
+    clock.tick(fps)
     if game_object.menu:
         if not game_object.level_lauching:
             menu_screen(game_object)
