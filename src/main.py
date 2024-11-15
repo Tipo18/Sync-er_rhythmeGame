@@ -52,7 +52,7 @@ class Active_Level:
         self.game_object = game_object
         self.active_player = None
         self.active_disk = None
-        self.speed = 4
+        self.speed = 5
         self.validated_disk = 0
         self.perfect = 0
         self.great = 0
@@ -265,9 +265,7 @@ def end_menu_screen(game_object):
             if event.key == pygame.K_n:
                 game_object.running = False
             elif event.key == pygame.K_m:
-                game_object.menu = True
-                game_object.player_name = ["-"] * 6
-                game_object.end_menu = False
+                retour_menu()
             elif event.key == pygame.K_y:
                 game_object.end_menu = False
                 game_class_init(game_object)
@@ -323,6 +321,11 @@ def action_on_disk(game_object, disk_object):
     else:
         game_object.active_level.missed_clicked_incr()
 
+def retour_menu():
+    game_object.menu = True
+    game_object.player_name = ["-"] * 6
+    game_object.num_key = 0
+    game_object.end_menu = False
 
 # csv logic
 
