@@ -1,6 +1,8 @@
 import random
 import os
 import csv
+import math
+import time
 from datetime import datetime
 
 import pygame
@@ -19,7 +21,7 @@ RED = (255, 0, 0)
 font_path = os.path.join("./Pixelify_Sans/", "PixelifySans-VariableFont_wght.ttf")
 big_font = pygame.font.Font(font_path, 120)
 mid_font = pygame.font.Font(font_path, 60)
-small_font = pygame.font.Font(font_path, 30) 
+small_font = pygame.font.Font(font_path, 35) 
 
 framecount = 0
 horizontal_line_1 = 650 + 45 + 65
@@ -43,6 +45,28 @@ def draw_text(text, font, color, surface, x, y, align):
         text_rect = text_obj.get_rect(topleft = (x, y))
     surface.blit(text_obj, text_rect)
 
+# Function to draw a heart shape
+def draw_pixelated_heart(surface, x, y, size, color):
+    heart_pattern = [
+        "  XX  XX  ",
+        " XXXXXXXX ",
+        "XXXXXXXXXX",
+        " XXXXXXXX ",
+        "  XXXXXXX ",
+        "   XXXX   ",
+        "    XX    "
+    ]
+
+    pixel_size = size // len(heart_pattern)  # Determine pixel size based on heart height
+
+    for row_index, row in enumerate(heart_pattern):
+        for col_index, pixel in enumerate(row):
+            if pixel == "X":
+                pygame.draw.rect(
+                    surface,
+                    color,
+                    (x + col_index * pixel_size, y + row_index * pixel_size, pixel_size, pixel_size)
+                )
 
 # Classe
 class Game():
@@ -167,6 +191,12 @@ class Disque(pygame.sprite.Sprite):
                 self.active_level.active_streak = 0
                 self.active_level.active_grt_streak = 0
 
+    # try color feedback for the ok,great,perfect validation but cant without stopping the game for little time but too much for rhytme game
+    def change_color(self, c1, c2, c3):
+        self.image = pygame.Surface((70, 70), pygame.SRCALPHA)
+        pygame.draw.circle(self.image, (c1, c2, c3), (35, 35), 35) 
+        
+
 class Leaderboard_info():
     def __init__(self):
         self.nb_partie_tt = 0
@@ -221,10 +251,10 @@ def menu_screen(game_object):
 
     draw_text("menu", mid_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 - 70, "center")
     draw_text("Press ENTER to Start", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2, "center")
-    draw_text("Press L to Leaderboard", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 35, "center")
-    draw_text("A/Q to play", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 100, "center")
-    draw_text("Press P to Resume", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 135, "center")
-    draw_text("Press M to Quit", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 170, "center")
+    draw_text("Press L to Leaderboard", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 40, "center")
+    draw_text("A/Q - keys to play", mid_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 120, "center")
+    draw_text("Press P to Resume", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 200, "center")
+    draw_text("Press M to Quit", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 235, "center")
 
     pygame.display.flip()
 
@@ -296,12 +326,13 @@ def level_active_screen(game_object):
     # Text
     draw_text(f"fps: {int(clock.get_fps())}", small_font, WHITE, screen, 20, 10, "left")
     draw_text(f"player: {game_object.active_level.active_player.name}", small_font, WHITE, screen, 20, HEIGHT// 4, "left")
-    draw_text(f"actual speed: {game_object.active_level.speed - 4}", small_font, WHITE, screen, 20, HEIGHT// 4 + 35, "left")
-    draw_text(f"{game_object.active_level.fault} out of 3", small_font, WHITE, screen, 20, HEIGHT// 4 + 105, "left")
-    draw_text(f"points: {game_object.active_level.point}", small_font, WHITE, screen, 20, HEIGHT// 4 + 140, "left")   
-    draw_text(f"streak: {game_object.active_level.active_streak}", small_font, WHITE, screen, 20, HEIGHT// 4 + 175, "left") 
+    draw_text(f"actual speed: {game_object.active_level.speed - 4}", small_font, WHITE, screen, 20, HEIGHT// 4 + 40, "left")
+    draw_text(f"streak: {game_object.active_level.active_streak}", small_font, WHITE, screen, 20, HEIGHT// 4 + 80, "left")
+    draw_text(f"points: {game_object.active_level.point}", mid_font, WHITE, screen, 20, 570, "left")   
 
-    #screen.blit(image, (250, 100))
+    for i in range(3-game_object.active_level.fault):
+        draw_pixelated_heart(screen, 20 + i * 58, 540, 40, (255, 0, 0))  # Red heart
+
     screen.blit(image, (500, 0))
 
     # create disc
