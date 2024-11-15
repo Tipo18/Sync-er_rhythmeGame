@@ -15,13 +15,24 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 
-font = pygame.font.SysFont('Arial', 36)
-small_font = pygame.font.SysFont('Arial', 24)
+
+font_path = os.path.join("./Pixelify_Sans/", "PixelifySans-VariableFont_wght.ttf")
+big_font = pygame.font.Font(font_path, 120)
+mid_font = pygame.font.Font(font_path, 60)
+small_font = pygame.font.Font(font_path, 30) 
 
 framecount = 0
 horizontal_line_1 = 650 + 45 + 65
 horizontal_line_2 = horizontal_line_1 + 125
 vertical_line = 175
+
+# Initialise le module de mixage audio
+pygame.mixer.init()
+pygame.mixer.music.load("assets/[FREE] Hyperpop Type Beat x Pop Punk Type Beat x Rock - Pocket.mp3")
+pygame.mixer.music.set_volume(1)
+pygame.mixer.music.play(-1)  # '-1' permet de jouer la musique en boucle
+
+image = pygame.image.load("assets/sun_colors.png")
 
 # Help to draw text on the screen, align : "center" or "left" to choose the text alignement
 def draw_text(text, font, color, surface, x, y, align):
@@ -88,13 +99,13 @@ class Active_Level:
 
     def great_incr(self):
         self.great += 1
-        self.point += 20
+        self.point += 30
         self.streak_incr()
         self.grt_streak_incr()
 
     def ok_incr(self):
         self.ok += 1
-        self.point += 5
+        self.point += 6
         self.streak_incr()
         self.active_grt_streat = 0
 
@@ -207,12 +218,15 @@ def menu_screen(game_object):
 
     # display
     screen.fill(WHITE)
-    draw_text("Main Menu", font, BLACK, screen, WIDTH // 2, HEIGHT // 3, "center")
+    draw_text("sync-er", big_font, BLACK, screen, WIDTH // 2, HEIGHT // 5 + 50, "center")
+
+    draw_text("menu", mid_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 - 70, "center")
     draw_text("Press ENTER to Start", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2, "center")
-    draw_text("A - Q to play", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 40, "center")
-    draw_text("Press P to Resume", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 120, "center")
-    draw_text("Press M to Quit", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 160, "center")
-    draw_text("Press L to Leaderboard", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 200, "center")
+    draw_text("Press L to Leaderboard", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 35, "center")
+    draw_text("A/Q to play", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 100, "center")
+    draw_text("Press P to Resume", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 135, "center")
+    draw_text("Press M to Quit", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 170, "center")
+
     pygame.display.flip()
 
 def level_lauching_screen(game_object):
@@ -232,11 +246,11 @@ def level_lauching_screen(game_object):
                 if game_object.num_key < 5:
                     game_object.num_key += 1
 
-    screen.fill(WHITE)
-    draw_text("Enter your name (max 6 chars):", font, BLACK, screen, WIDTH // 2, HEIGHT // 3, "center")
+    screen.fill(BLACK)
+    draw_text("Enter your name - max 6 chars", mid_font, WHITE, screen, WIDTH // 2, HEIGHT // 3  - 50, "center")
     display_text = "".join(game_object.player_name).strip()
-    draw_text(display_text, font, BLACK, screen, WIDTH // 2, HEIGHT // 2, "center")
-    draw_text("ENTER to launch the game", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 120, "center")
+    draw_text(display_text, mid_font, WHITE, screen, WIDTH // 2, HEIGHT // 2, "center")
+    draw_text("ENTER to launch the game", mid_font, WHITE, screen, WIDTH // 2, HEIGHT // 2 + 120 + 50, "center")
     pygame.display.flip()
 
 def pause_screen(game_object):
@@ -248,9 +262,9 @@ def pause_screen(game_object):
                 game_object.running = False
 
     screen.fill(WHITE)
-    draw_text("Pause", font, BLACK, screen, WIDTH // 2, HEIGHT // 3, "center")
+    draw_text("Pause", big_font, BLACK, screen, WIDTH // 2, HEIGHT // 3, "center")
     draw_text("Press P to Resume", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2, "center")
-    draw_text("Press M to Quit", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 40, "center")
+    draw_text("Press M to Quit", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 35, "center")
     pygame.display.flip()
 
 def level_active_screen(game_object):
@@ -282,15 +296,14 @@ def level_active_screen(game_object):
 
     # Text
     draw_text(f"fps: {int(clock.get_fps())}", small_font, WHITE, screen, 20, 10, "left")
-    draw_text(f"player: {game_object.active_level.active_player.name}", small_font, WHITE, screen, 20, 50, "left")
-    draw_text(f"actual speed: {game_object.active_level.speed}", small_font, WHITE, screen, 20, 80, "left")
-    draw_text(f"fault: {game_object.active_level.fault}", small_font, WHITE, screen, 20, 110, "left")
-    draw_text(f"ok: {game_object.active_level.ok}", small_font, WHITE, screen, 20, 140, "left")
-    draw_text(f"great: {game_object.active_level.great}", small_font, WHITE, screen, 20, 170,"left")   
-    draw_text(f"perfect: {game_object.active_level.perfect}", small_font, WHITE, screen, 20, 200, "left")   
-    draw_text(f"points: {game_object.active_level.point}", small_font, WHITE, screen, 20, 230, "left")   
-    draw_text(f"active_streak: {game_object.active_level.active_streak}", small_font, WHITE, screen, 20, 260, "left")   
-    draw_text(f"active_grt_steak: {game_object.active_level.active_grt_streak}", small_font, WHITE, screen, 20, 290, "left")
+    draw_text(f"player: {game_object.active_level.active_player.name}", small_font, WHITE, screen, 20, HEIGHT// 4, "left")
+    draw_text(f"actual speed: {game_object.active_level.speed - 4}", small_font, WHITE, screen, 20, HEIGHT// 4 + 35, "left")
+    draw_text(f"{game_object.active_level.fault} out of 3", small_font, WHITE, screen, 20, HEIGHT// 4 + 105, "left")
+    draw_text(f"points: {game_object.active_level.point}", small_font, WHITE, screen, 20, HEIGHT// 4 + 140, "left")   
+    draw_text(f"streak: {game_object.active_level.active_streak}", small_font, WHITE, screen, 20, HEIGHT// 4 + 175, "left") 
+
+    #screen.blit(image, (250, 100))
+    screen.blit(image, (500, 0))
 
     # create disc
     global framecount
@@ -317,13 +330,13 @@ def end_menu_screen(game_object):
                 game_class_init(game_object)
 
     screen.fill(WHITE)
-    draw_text(f"Well play {game_object.active_level.active_player.name}" , font, BLACK, screen, WIDTH // 2, HEIGHT // 3, "center")
-    draw_text(f"Final score : {game_object.active_level.point}", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2, "center")
+    draw_text(f"finished - {game_object.active_level.active_player.name}" , big_font, BLACK, screen,  WIDTH // 2, HEIGHT // 5 + 50, "center")
+    draw_text(f"Final score : {game_object.active_level.point}", mid_font, BLACK, screen, WIDTH // 2, HEIGHT // 2, "center")
     if game_object.active_level.active_player.highscore != 0:
-      draw_text(f"your latest highscore is : {game_object.active_level.active_player.highscore}", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 +40 , "center")  
+      draw_text(f"your latest highscore is : {game_object.active_level.active_player.highscore}", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 +50 , "center")  
 
-    draw_text("Do you want to play again ? (y/n)", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 120, "center")
-    draw_text("Go back to menu M", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 160, "center")
+    draw_text("Do you want to play again ?  Y/N", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 150, "center")
+    draw_text("Go back to menu M", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 185, "center")
 
     pygame.display.flip()
 
@@ -334,25 +347,18 @@ def leaderboard_screen(game_object):
                 print(game_object.leaderboard)
                 game_object.leaderboard = False
 
-    screen.fill(WHITE)
-    draw_text("LeaderBoard", font, BLACK, screen, WIDTH // 2, HEIGHT // 3, "center")
-    draw_text(f"nombre total de partie jouées {game_object.active_leaderboard.nb_partie_tt}", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2, "center")
-    draw_text(f"nombre total de points {game_object.active_leaderboard.nb_partie_tt}", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 30, "center")
-    draw_text(f"nombre total de cliques {game_object.active_leaderboard.b_click_tt}", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 60, "center")
+    screen.fill(BLACK)
+    draw_text("leaderboard", big_font, WHITE, screen, WIDTH // 2, HEIGHT // 5 + 50, "center")
 
     for index, value in enumerate(game_object.active_leaderboard.array_5_best):
-        draw_text(f"{value[0]} : {value[1]}", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 90 + index * 30, "center")
+        draw_text(f"{value[1]} : {value[0]}", small_font, WHITE, screen, 100, HEIGHT // 3 + 50 + index * 35, "left")
 
-    draw_text(f"Return to menu : M", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 300, "left")
+    draw_text(f"nombre total de partie finis: {game_object.active_leaderboard.nb_partie_tt}", small_font, WHITE, screen, WIDTH // 2, HEIGHT // 2 + 200, "center")
+    draw_text(f"nombre total de points: {game_object.active_leaderboard.nb_partie_tt}", small_font, WHITE, screen, WIDTH // 2, HEIGHT // 2 + 235, "center")
+    draw_text(f"nombre total de cliques: {game_object.active_leaderboard.b_click_tt}", small_font, WHITE, screen, WIDTH // 2, HEIGHT // 2 + 270, "center")
+
+    draw_text(f"Return to menu : M", small_font, WHITE, screen, WIDTH // 2, HEIGHT // 2 + 305, "center")
     pygame.display.flip()
-
-
-
-    # nb de partie total
-    # score total
-    # nb de clique
-    # 5 meilleur entrée
-
 
 
 # Game logic function
