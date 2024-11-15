@@ -85,7 +85,7 @@ class Active_Level:
     
     def speed_incr(self):
         self.speed += 1
-    
+
     def validated_disk_incr(self):
         self.validated_disk += 1
         if self.validated_disk % 8 == 0:
@@ -201,7 +201,6 @@ class Leaderboard_info():
  
 
 # Screen
-# Menu screen function
 def menu_screen(game_object):
     # key listening
     for event in pygame.event.get():
@@ -354,7 +353,7 @@ def leaderboard_screen(game_object):
         draw_text(f"{value[1]} : {value[0]}", small_font, WHITE, screen, 100, HEIGHT // 3 + 50 + index * 35, "left")
 
     draw_text(f"nombre total de partie finis: {game_object.active_leaderboard.nb_partie_tt}", small_font, WHITE, screen, WIDTH // 2, HEIGHT // 2 + 200, "center")
-    draw_text(f"nombre total de points: {game_object.active_leaderboard.nb_partie_tt}", small_font, WHITE, screen, WIDTH // 2, HEIGHT // 2 + 235, "center")
+    draw_text(f"nombre total de points: {game_object.active_leaderboard.point_tt}", small_font, WHITE, screen, WIDTH // 2, HEIGHT // 2 + 235, "center")
     draw_text(f"nombre total de cliques: {game_object.active_leaderboard.b_click_tt}", small_font, WHITE, screen, WIDTH // 2, HEIGHT // 2 + 270, "center")
 
     draw_text(f"Return to menu : M", small_font, WHITE, screen, WIDTH // 2, HEIGHT // 2 + 305, "center")
