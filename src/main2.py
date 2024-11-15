@@ -15,7 +15,6 @@ font = pygame.font.SysFont('Arial', 36)
 small_font = pygame.font.SysFont('Arial', 24)
 
 framecount = 0
-clock = pygame.time.Clock()
 horizontal_line_1 = 650 + 45 + 65
 horizontal_line_2 = horizontal_line_1 + 125
 vertical_line = 175
@@ -48,35 +47,97 @@ class Active_Level:
     def __init__(self):
         self.active_player = None
         self.active_disk = None
+        self.speed = 4
+        self.validated_disk = 0
         self.perfect = 0
         self.great = 0
         self.ok = 0
         self.fault = 0
+        self.point = 0
+        self.nb_click = 0
+        self.missed_clicked = 0
+        self.active_streak = 0
+        self.longest_streak = 0
+        self.active_grt_streak = 0
+        self.longest_grt_streak = 0
+    
+    def speed_incr(self):
+        self.speed += 1
+    
+    def validated_disk_incr(self):
+        self.validated_disk += 1
+
+    def perfect_incr(self):
+        self.perfect += 1
+        self.point += 100
+        self.streak_incr()
+        self.grt_streak_incr()
+
+    def great_incr(self):
+        self.great += 1
+        self.point += 20
+        self.streak_incr()
+        self.grt_streak_incr()
+
+    def ok_incr(self):
+        self.ok += 1
+        self.point += 5
+        self.streak_incr()
+        self.active_grt_streat = 0
+
+    def fault_incr(self):
+        self.fault += 1
+
+    def nb_click_incr(self):
+        self.nb_click += 1
+
+    def missed_clicked_incr(self):
+        self.missed_clicked += 1
+        self.active_streak = 0
+        self.active_grt_streak = 0
+
+    def streak_incr(self):
+        self.active_streak += 1
+        if self.active_streak > self.longest_streak:
+            self.longest_streak = self.active_streak
+
+    def grt_streak_incr(self):
+        self.active_grt_streak += 1
+        if self.active_grt_streak > self.longest_grt_streak:
+            self.longest_grt_streak = self.active_grt_streak
+
 
     def link_player(self, player):
         self.active_player = player
+        self.high_score = 0
 
     def link_disks(self):
         self.active_disk = pygame.sprite.Group()
+
 
 class Player():
     def __init__(self, name):
         self.name = name
 
 class Disque(pygame.sprite.Sprite):
-    def __init__(self, line):
+    def __init__(self, line, speed, active_level):
         super().__init__()  # Initialize the Sprite base class
         self.image = pygame.Surface((70, 70), pygame.SRCALPHA)
         pygame.draw.circle(self.image, (255, 255, 255), (35, 35), 35) 
         self.rect = self.image.get_rect()
         self.rect.y = horizontal_line_1-35 if line == 1 else horizontal_line_2-35
         self.rect.x = 1500
-        self.speed = 6
+        self.speed = speed
+        self.active_level = active_level
 
     def update(self):
         self.rect.x -= self.speed 
         if self.rect.x < 0:
             self.kill()
+            if hasattr(self, 'active_level') and self.active_level is not None:
+                self.active_level.fault_incr()
+                self.active_level.active_streak = 0
+                self.active_level.active_grt_streak = 0
 
 
 # Screen
@@ -142,6 +203,14 @@ def level_active_screen(game_object):
                 game_object.pause = True
             elif event.key == pygame.K_m:
                 game_object.runnig = False
+            elif event.key == pygame.K_a:
+                game_object.active_level.nb_click += 1
+                cl_disk1 = find_closest_disque(game_object, 1)
+                action_on_disk(game_object, cl_disk1)
+            elif event.key == pygame.K_z:
+                game_object.active_level.nb_click += 1
+                cl_disk2 = find_closest_disque(game_object, 2)
+                action_on_disk(game_object, cl_disk2)
 
     screen.fill(BLACK)
     pygame.draw.rect(screen, WHITE, (0, 650, 1500, 350), width=6, border_radius=35)
@@ -157,22 +226,29 @@ def level_active_screen(game_object):
     # Text
     draw_text(f"fps: {int(clock.get_fps())}", small_font, WHITE, screen, 20, HEIGHT // 8, "left")
     draw_text(f"player: {game_object.active_level.active_player.name}", small_font, WHITE, screen, 20, HEIGHT // 8 + 40, "left")
+    draw_text(f"point: {game_object.active_level.point}", small_font, WHITE, screen, 20, HEIGHT // 8 + 80, "left")
+    draw_text(f"active streak: {game_object.active_level.active_streak}", small_font, WHITE, screen, 20, HEIGHT // 8 + 120, "left")
+    draw_text(f"fault: {game_object.active_level.fault}", small_font, WHITE, screen, 20, HEIGHT // 8 + 160, "left")
 
     # create disc
     global framecount
     framecount += 1
 
     if framecount % 70 == 0:
-        game_object.active_level.active_disk.add(Disque(random.randint(1,2)))
+        game_object.active_level.active_disk.add(Disque(random.randint(1,2), game_object.active_level.speed, game_object.active_level))
         
     game_object.active_level.active_disk.update()
     game_object.active_level.active_disk.draw(screen)
 
     pygame.display.flip()
 
+    if game_object.active_level.fault >= 3:
+        global running
+        running = False
+
+
 
 # Game logic function
-
 def game_class_init(game_object):
     player_name = "".join(char for char in game_object.player_name if char != "-").strip()
     player_object = Player(player_name)
@@ -182,10 +258,41 @@ def game_class_init(game_object):
     active_level_object.link_disks()
     game_object.link_active_level(active_level_object)  
 
-fps = 60  # Target frame rate
-clock = pygame.time.Clock()
+def find_closest_disque(game_object, line):
+    # Filter disques based on the line value
+    filtered_disk = [
+        disk for disk in game_object.active_level.active_disk 
+        if ((disk.rect.y == horizontal_line_1 - 35 and line == 1) or
+            (disk.rect.y == horizontal_line_2 - 35 and line == 2)) 
+        and disk.rect.x + 35 > vertical_line - 80          # marge to be able to valide even if a bit after the line
+    ]
+    if not filtered_disk:
+        game_object.active_level.missed_clicked_incr()
+        return None  
+    
+    closest_disk = min(filtered_disk, key=lambda x: abs(x.rect.x))
+    return closest_disk
+
+def action_on_disk(game_object, disk_object):
+    if disk_object is not None:
+        dist = disk_object.rect.x + 35 - vertical_line
+        if dist < 80:
+            disk_object.kill()
+            game_object.active_level.validated_disk_incr()
+            if abs(dist) <= 3:
+                game_object.active_level.perfect_incr()
+            elif abs(dist) <= 20:
+                game_object.active_level.great_incr()
+            else:
+                game_object.active_level.ok_incr()
+        else:
+            game_object.active_level.missed_clicked_incr()
+    else:
+        game_object.active_level.missed_clicked_incr()
 
 # Game loop
+fps = 60
+clock = pygame.time.Clock()
 game_object = Game()
 
 while game_object.runnig:
@@ -199,5 +306,7 @@ while game_object.runnig:
         pause_screen(game_object)
     else:
         level_active_screen(game_object)
+
+            
 
 
