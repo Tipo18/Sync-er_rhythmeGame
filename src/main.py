@@ -1,6 +1,7 @@
 import random
 import os
-#import csv
+import csv
+from datetime import datetime
 
 import pygame
 
@@ -40,12 +41,17 @@ class Game():
         self.level_lauching = False
         self.pause = False
         self.end_menu = False
+        self.leaderboard = False
         self.player_name = ["-"] * 6
         self.num_key = 0
         self.active_level = None
+        self.active_leaderboard = None
 
     def link_active_level(self, active_level):
         self.active_level = active_level
+
+    def link_leaderboard(self, leaderboard):
+        self.active_leaderboard = leaderboard
 
 class Active_Level:
     def __init__(self, game_object):
@@ -96,6 +102,7 @@ class Active_Level:
         self.fault += 1
         if self.fault == 3:
             game_object.end_menu = True
+            csv_end(self)
 
 
     def nb_click_incr(self):
@@ -125,8 +132,9 @@ class Active_Level:
         self.active_disk = pygame.sprite.Group()
 
 class Player():
-    def __init__(self, name):
+    def __init__(self, name, highscore):
         self.name = name
+        self.highscore = highscore
 
 class Disque(pygame.sprite.Sprite):
     def __init__(self, line, speed, active_level):
@@ -148,6 +156,38 @@ class Disque(pygame.sprite.Sprite):
                 self.active_level.active_streak = 0
                 self.active_level.active_grt_streak = 0
 
+class Leaderboard_info():
+    def __init__(self):
+        self.nb_partie_tt = 0
+        self.point_tt = 0
+        self.b_click_tt = 0
+        self.array_5_best = []
+    
+    def update_leaderboard(self):     
+        data_folder = "data"
+        player_scores = []
+
+        for file_name in os.listdir(data_folder):
+            if file_name.endswith(".csv"):
+                player_name = os.path.splitext(file_name)[0]
+                file_path = os.path.join(data_folder, file_name)
+                
+                with open(file_path, mode='r') as file:
+                    reader = csv.DictReader(file)
+                    for row in reader:
+                        finished = row.get("finished_game", "False").strip().lower() == "true"
+                        if finished:
+                            self.nb_partie_tt += 1
+                            try:
+                                score = int(row.get("point", 0) or 0)
+                                self.point_tt += score
+                                self.b_click_tt += int(row.get("nb_click", 0) or 0)
+                                player_scores.append((player_name, score))
+                            except ValueError:
+                                print(f"Skipping invalid data in {file_name}: {row}")
+
+        self.array_5_best = sorted(player_scores, key=lambda x: x[1], reverse=True)[:5]
+ 
 
 # Screen
 # Menu screen function
@@ -159,14 +199,20 @@ def menu_screen(game_object):
                 game_object.level_lauching = True
             elif event.key == pygame.K_m:
                 game_object.running = False
+            elif event.key == pygame.K_l:
+                leaderboard_object = Leaderboard_info()
+                leaderboard_object.update_leaderboard()
+                game_object.link_leaderboard(leaderboard_object)
+                game_object.leaderboard = True
 
     # display
     screen.fill(WHITE)
     draw_text("Main Menu", font, BLACK, screen, WIDTH // 2, HEIGHT // 3, "center")
-    draw_text("A - Q to play", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 3 + 80, "center")
     draw_text("Press ENTER to Start", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2, "center")
-    draw_text("Press P to Resume", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 40, "center")
-    draw_text("Press M to Quit", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 80, "center")
+    draw_text("A - Q to play", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 40, "center")
+    draw_text("Press P to Resume", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 120, "center")
+    draw_text("Press M to Quit", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 160, "center")
+    draw_text("Press L to Leaderboard", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 200, "center")
     pygame.display.flip()
 
 def level_lauching_screen(game_object):
@@ -273,21 +319,54 @@ def end_menu_screen(game_object):
     screen.fill(WHITE)
     draw_text(f"Well play {game_object.active_level.active_player.name}" , font, BLACK, screen, WIDTH // 2, HEIGHT // 3, "center")
     draw_text(f"Final score : {game_object.active_level.point}", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2, "center")
+    if game_object.active_level.active_player.highscore != 0:
+      draw_text(f"your latest highscore is : {game_object.active_level.active_player.highscore}", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 +40 , "center")  
 
     draw_text("Do you want to play again ? (y/n)", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 120, "center")
-    draw_text("Go back to menue M", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 160, "center")
+    draw_text("Go back to menu M", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 160, "center")
 
     pygame.display.flip()
+
+def leaderboard_screen(game_object):
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_m:
+                print(game_object.leaderboard)
+                game_object.leaderboard = False
+
+    screen.fill(WHITE)
+    draw_text("LeaderBoard", font, BLACK, screen, WIDTH // 2, HEIGHT // 3, "center")
+    draw_text(f"nombre total de partie jouées {game_object.active_leaderboard.nb_partie_tt}", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2, "center")
+    draw_text(f"nombre total de points {game_object.active_leaderboard.nb_partie_tt}", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 30, "center")
+    draw_text(f"nombre total de cliques {game_object.active_leaderboard.b_click_tt}", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 60, "center")
+
+    for index, value in enumerate(game_object.active_leaderboard.array_5_best):
+        draw_text(f"{value[0]} : {value[1]}", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 90 + index * 30, "center")
+
+    draw_text(f"Return to menu : M", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 300, "left")
+    pygame.display.flip()
+
+
+
+    # nb de partie total
+    # score total
+    # nb de clique
+    # 5 meilleur entrée
+
+
 
 # Game logic function
 def game_class_init(game_object):
     player_name = "".join(char for char in game_object.player_name if char != "-").strip()
-    player_object = Player(player_name)
+    highscore = csv_init(player_name)
+
+    player_object = Player(player_name, highscore)
     active_level_object = Active_Level(game_object)
 
     active_level_object.link_player(player_object)
     active_level_object.link_disks()
-    game_object.link_active_level(active_level_object)  
+    game_object.link_active_level(active_level_object)
+
 
 def find_closest_disque(game_object, line):
     # Filter disques based on the line value
@@ -329,11 +408,59 @@ def retour_menu():
 
 # csv logic
 
-def csv_init():
-    print("")
+def csv_init(player_name):
+    print("csv init")
+    higscore = 0
+    file_name = "./data/" + player_name + ".csv"
+    if not os.path.isfile(file_name):
+        with open(file_name, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow([
+                "Creation_time_stamp", "finished_game", "finish_time_stamp", "speed", "point", 
+                "validated_disk", "perfect", "great", "ok", "nb_click", 
+                "missed_clicked", "longest_streak", "longest_grt_streak"
+            ])
+    else:
+        with open(file_name, mode='r') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                score = row.get("point")
+                if score:
+                    higscore = max(higscore, int(score))
 
-def csv_end():
-    print("")
+    with open(file_name, mode='a', newline='') as file:
+        writer = csv.writer(file)
+        creation_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        writer.writerow([creation_timestamp, False] + [""] * 11)
+
+    return higscore
+
+def csv_end(active_level):
+    print("csv end")
+    file_name = "./data/" + active_level.active_player.name + ".csv"
+    with open(file_name, mode='r', newline='') as file:
+        reader = list(csv.reader(file))
+        
+    last_row_index = len(reader) - 1
+    reader[last_row_index] = [
+        reader[last_row_index][0],
+        True, 
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        game_object.active_level.speed,
+        game_object.active_level.point,
+        game_object.active_level.validated_disk,
+        game_object.active_level.perfect,
+        game_object.active_level.great,
+        game_object.active_level.ok,
+        game_object.active_level.nb_click,
+        game_object.active_level.missed_clicked,
+        game_object.active_level.longest_streak,
+        game_object.active_level.longest_grt_streak
+        ]
+    
+    with open(file_name, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerows(reader)
 
 
 # Game loop
@@ -344,10 +471,13 @@ game_object = Game()
 while game_object.running:
     clock.tick(fps)
     if game_object.menu:
-        if not game_object.level_lauching:
-            menu_screen(game_object)
-        else:
+        if game_object.level_lauching:
             level_lauching_screen(game_object)
+        elif game_object.leaderboard:
+            leaderboard_screen(game_object)
+        else:
+            menu_screen(game_object)
+
     elif game_object.pause:
         pause_screen(game_object)
     else:
