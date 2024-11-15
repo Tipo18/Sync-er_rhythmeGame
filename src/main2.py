@@ -32,10 +32,11 @@ def draw_text(text, font, color, surface, x, y, align):
 # Classe
 class Game():
     def __init__(self):
-        self.runnig = True
+        self.running = True
         self.menu = True
         self.level_lauching = False
         self.pause = False
+        self.end_menu = True
         self.player_name = ["-"] * 6
         self.num_key = 0
         self.active_level = None
@@ -44,7 +45,8 @@ class Game():
         self.active_level = active_level
 
 class Active_Level:
-    def __init__(self):
+    def __init__(self, game_object):
+        self.game_object = game_object
         self.active_player = None
         self.active_disk = None
         self.speed = 4
@@ -66,6 +68,8 @@ class Active_Level:
     
     def validated_disk_incr(self):
         self.validated_disk += 1
+        if self.validated_disk % 8 == 0:
+            self.speed_incr()
 
     def perfect_incr(self):
         self.perfect += 1
@@ -87,6 +91,9 @@ class Active_Level:
 
     def fault_incr(self):
         self.fault += 1
+        if self.fault == 3:
+            game_object.end_menu = True
+
 
     def nb_click_incr(self):
         self.nb_click += 1
@@ -149,11 +156,12 @@ def menu_screen(game_object):
             if event.key == pygame.K_RETURN:
                 game_object.level_lauching = True
             elif event.key == pygame.K_m:
-                game_object.runnig = False
+                game_object.running = False
 
     # display
     screen.fill(WHITE)
     draw_text("Main Menu", font, BLACK, screen, WIDTH // 2, HEIGHT // 3, "center")
+    draw_text("A - Q to play", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 3 + 80, "center")
     draw_text("Press ENTER to Start", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2, "center")
     draw_text("Press P to Resume", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 40, "center")
     draw_text("Press M to Quit", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 80, "center")
@@ -180,6 +188,7 @@ def level_lauching_screen(game_object):
     draw_text("Enter your name (max 6 chars):", font, BLACK, screen, WIDTH // 2, HEIGHT // 3, "center")
     display_text = "".join(game_object.player_name).strip()
     draw_text(display_text, font, BLACK, screen, WIDTH // 2, HEIGHT // 2, "center")
+    draw_text("ENTER to launch the game", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 120, "center")
     pygame.display.flip()
 
 def pause_screen(game_object):
@@ -188,7 +197,7 @@ def pause_screen(game_object):
             if event.key == pygame.K_p:
                 game_object.pause = False
             elif event.key == pygame.K_m:
-                game_object.runnig = False
+                game_object.running = False
 
     screen.fill(WHITE)
     draw_text("Pause", font, BLACK, screen, WIDTH // 2, HEIGHT // 3, "center")
@@ -202,12 +211,12 @@ def level_active_screen(game_object):
             if event.key == pygame.K_p:
                 game_object.pause = True
             elif event.key == pygame.K_m:
-                game_object.runnig = False
+                game_object.running = False
             elif event.key == pygame.K_a:
                 game_object.active_level.nb_click += 1
                 cl_disk1 = find_closest_disque(game_object, 1)
                 action_on_disk(game_object, cl_disk1)
-            elif event.key == pygame.K_z:
+            elif event.key == pygame.K_q:
                 game_object.active_level.nb_click += 1
                 cl_disk2 = find_closest_disque(game_object, 2)
                 action_on_disk(game_object, cl_disk2)
@@ -224,17 +233,23 @@ def level_active_screen(game_object):
     pygame.draw.circle(screen, WHITE, (vertical_line,horizontal_line_2 ), 45, width=4)
 
     # Text
-    draw_text(f"fps: {int(clock.get_fps())}", small_font, WHITE, screen, 20, HEIGHT // 8, "left")
-    draw_text(f"player: {game_object.active_level.active_player.name}", small_font, WHITE, screen, 20, HEIGHT // 8 + 40, "left")
-    draw_text(f"point: {game_object.active_level.point}", small_font, WHITE, screen, 20, HEIGHT // 8 + 80, "left")
-    draw_text(f"active streak: {game_object.active_level.active_streak}", small_font, WHITE, screen, 20, HEIGHT // 8 + 120, "left")
-    draw_text(f"fault: {game_object.active_level.fault}", small_font, WHITE, screen, 20, HEIGHT // 8 + 160, "left")
+    draw_text(f"fps: {int(clock.get_fps())}", small_font, WHITE, screen, 20, 10, "left")
+    draw_text(f"player: {game_object.active_level.active_player.name}", small_font, WHITE, screen, 20, 50, "left")
+    draw_text(f"actual speed: {game_object.active_level.speed}", small_font, WHITE, screen, 20, 80, "left")
+    draw_text(f"fault: {game_object.active_level.fault}", small_font, WHITE, screen, 20, 110, "left")
+    draw_text(f"ok: {game_object.active_level.ok}", small_font, WHITE, screen, 20, 140, "left")
+    draw_text(f"great: {game_object.active_level.great}", small_font, WHITE, screen, 20, 170,"left")   
+    draw_text(f"perfect: {game_object.active_level.perfect}", small_font, WHITE, screen, 20, 200, "left")   
+    draw_text(f"points: {game_object.active_level.point}", small_font, WHITE, screen, 20, 230, "left")   
+    draw_text(f"active_streak: {game_object.active_level.active_streak}", small_font, WHITE, screen, 20, 260, "left")   
+    draw_text(f"active_grt_steak: {game_object.active_level.active_grt_streak}", small_font, WHITE, screen, 20, 290, "left")
 
     # create disc
     global framecount
     framecount += 1
+    spawning_rate = int(280 / game_object.active_level.speed)
 
-    if framecount % 70 == 0:
+    if framecount % spawning_rate == 0:
         game_object.active_level.active_disk.add(Disque(random.randint(1,2), game_object.active_level.speed, game_object.active_level))
         
     game_object.active_level.active_disk.update()
@@ -242,17 +257,30 @@ def level_active_screen(game_object):
 
     pygame.display.flip()
 
-    if game_object.active_level.fault >= 3:
-        global running
-        running = False
+def end_menu_screen(game_object):
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_n:
+                game_object.running = False
+            elif event.key == pygame.K_m:
+                game_object.running = False
+            elif event.key == pygame.K_y:
+                game_object.end_menu = False
+                game_class_init(game_object)
 
+    screen.fill(WHITE)
+    draw_text(f"Well play {game_object.active_level.active_player.name}" , font, BLACK, screen, WIDTH // 2, HEIGHT // 3, "center")
+    draw_text(f"Final score : {game_object.active_level.point}", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2, "center")
 
+    draw_text("Do you want to play again ? (y/n)", small_font, BLACK, screen, WIDTH // 2, HEIGHT // 2 + 120, "center")
+
+    pygame.display.flip()
 
 # Game logic function
 def game_class_init(game_object):
     player_name = "".join(char for char in game_object.player_name if char != "-").strip()
     player_object = Player(player_name)
-    active_level_object = Active_Level()
+    active_level_object = Active_Level(game_object)
 
     active_level_object.link_player(player_object)
     active_level_object.link_disks()
@@ -295,7 +323,7 @@ fps = 60
 clock = pygame.time.Clock()
 game_object = Game()
 
-while game_object.runnig:
+while game_object.running:
     clock.tick(fps)
     if game_object.menu:
         if not game_object.level_lauching:
@@ -305,8 +333,8 @@ while game_object.runnig:
     elif game_object.pause:
         pause_screen(game_object)
     else:
-        level_active_screen(game_object)
-
-            
-
+        if not game_object.end_menu:
+            level_active_screen(game_object)
+        else:
+            end_menu_screen(game_object)
 
