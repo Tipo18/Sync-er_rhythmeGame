@@ -4,7 +4,8 @@
 **Sync-er** is an academic project developed as part of a coursework assignment. It's a rhythm game inspired by Guitar Hero, featuring a minimalist pixel-art aesthetic. The game is built using **Python** and **Pygame** with additional data analysis capabilities using **Matplotlib** and **Jupyter Notebooks**.
 
 ## Demo video
-https://github.com/user-attachments/assets/fda2ed82-4ecf-4707-ad52-2e302b0571cd
+[![Watch the demo on YouTube][([https://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg)](https://www.youtube.com/watch?v=dQw4w9WgXcQ)](https://www.youtube.com/watch?v=QoK0352fRdc)
+
 
 ## 🚀 Features
 
